@@ -11,8 +11,8 @@ class Namespace:
 config = Namespace()
 config.DEBUG = True
 config.MINIO_ENDPOINT = 'localhost:9000'
-config.MINIO_ACCESS_KEY = 'AKIAIOSFODNN7EXAMPLE'
-config.MINIO_SECRET_KEY = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+config.MINIO_ACCESS_KEY = 'ACCESSKEYWHICHSHOULDBECHANGED'
+config.MINIO_SECRET_KEY = 'SECRETKEYWHICHSHOULDBECHANGED'
 
 
 class TestStorageClient(unittest.TestCase):
