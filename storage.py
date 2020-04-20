@@ -174,7 +174,6 @@ class StorageClient:
             metadata=metadata,
         )
 
-        bucket = self.get_or_create_bucket(bucket)
         serialized = self.helper_serialize_value(value, encoding=encoding)
 
         self.minio_client.put_object(
