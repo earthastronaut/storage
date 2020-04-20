@@ -14,6 +14,9 @@ __all__ = [
 ]
 
 
+__version__ = '1.0.0'
+
+
 class StorageError(Exception):
     """ General errors for storage """
 
