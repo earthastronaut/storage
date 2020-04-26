@@ -17,19 +17,24 @@ config.MINIO_SECRET_KEY = 'SECRETKEYWHICHSHOULDBECHANGED'
 
 class TestStorageClient(unittest.TestCase):
 
-    def setUp(self):
-        self.client = storage.StorageClient(
+    @classmethod
+    def setUpClass(cls):
+        cls.client = storage.StorageClient(
             endpoint=config.MINIO_ENDPOINT,
             access_key=config.MINIO_ACCESS_KEY,
             secret_key=config.MINIO_SECRET_KEY,
             secure=(not config.DEBUG),
         )
 
+    def setUp(self):
+        self.bucket = 'rabbit'
+        self.client.get_or_create_bucket(self.bucket)
+
     def test_storage_client(self):
         client = self.client
 
         obj_put = client.put_value(
-            bucket='rabbit',
+            bucket=self.bucket,
             key='turtle/rabbit.json',
             value={"hello": "world\u0000"},
             metadata={'meta': 'data'},
@@ -117,6 +122,49 @@ class TestStorageClient(unittest.TestCase):
             }
         }
         self.assertEqual(answer, correct_answer)
+
+    def test_storage_client_remove_object(self):
+        client = self.client
+
+        obj = client.put_value(
+            bucket=self.bucket,
+            key=f'rabbit_deleteme.json',
+            value={"hello": "world"},
+        )
+
+        client.remove_object(obj)
+
+        self.assertRaises(
+            storage.error.NoSuchKey,
+            client.get_object,
+            # **kws
+            bucket=obj.bucket,
+            key=obj.key,
+        )
+
+    def test_storage_client_remove_objects(self):
+        client = self.client
+        bucket = self.bucket
+
+        objects = []
+        for i in range(3):
+            objects.append(
+                client.put_value(
+                    bucket=bucket,
+                    key=f'turtle/rabbit{i}.json',
+                    value={"hello": i},
+                )
+            )
+        client.remove_objects(objects)
+
+        for obj in objects:
+            self.assertRaises(
+                storage.error.NoSuchKey,
+                client.get_object,
+                # **kws
+                bucket=obj.bucket,
+                key=obj.key,
+            )
 
 
 if __name__ == '__main__':

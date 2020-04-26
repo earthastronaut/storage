@@ -8,17 +8,13 @@ from minio import (
 )
 
 __all__ = [
-    'StorageError',
+    'error',
     'StorageObject',
     'StorageClient',
 ]
 
 
 __version__ = '1.0.0'
-
-
-class StorageError(Exception):
-    """ General errors for storage """
 
 
 class StorageObject:
@@ -59,6 +55,8 @@ class StorageClient:
     Example:
 
     """
+
+    StorageObjectClass = StorageObject
 
     def __init__(self, endpoint, **kws):
         kws['endpoint'] = endpoint
@@ -146,7 +144,16 @@ class StorageClient:
             return json.loads(value.decode(encoding))
 
         else:
-            raise StorageError(f'Unknown serializer method {serializer_method}')
+            raise error.MinioError(f'Unknown serializer method {serializer_method}')  # noqa
+
+    def create_storage_object(self, bucket, key, value=None, metadata=None, **kws):  # noqa
+        return self.StorageObjectClass(
+            bucket=bucket,
+            key=key,
+            value=value,
+            metadata=metadata,
+            **kws
+        )
 
     def put_value(self, bucket, key, value, metadata=None, encoding='utf-8'):
         """Put the content into storage.
@@ -170,7 +177,7 @@ class StorageClient:
             StorageObject: new storage object from the components including the
                 storage client.
         """
-        storage_object = StorageObject(
+        storage_object = self.create_storage_object(
             bucket=bucket,
             key=key,
             value=value,
@@ -248,3 +255,41 @@ class StorageClient:
             value=value,
             metadata=metadata,
         )
+
+    def remove_object(self, storage_object):
+        """ Remove object from bucket.
+
+        Args:
+            storage_object (StorageObject): The bucket and key of the storage
+                object.
+        """
+        self.minio_client.remove_object(
+            bucket_name=storage_object.bucket,
+            object_name=storage_object.key,
+        )
+
+    def remove_objects(self, storage_objects):
+        """ Remove objects from bucket.
+
+        Objects are deleted in batch. 
+
+        Args:
+            storage_objects (List[StorageObject]): List-like iterator of 
+                storage objects.
+
+        Raises:
+            RemoveObjectError: If any errors are returned for deleting objects.
+        """
+        objects_by_bucket = {}
+        for obj in storage_objects:
+            objects_by_bucket.setdefault(obj.bucket, []).append(obj.key)
+
+        for bucket, keys in objects_by_bucket.items():
+            errors = list(self.minio_client.remove_objects(
+                bucket_name=bucket,
+                objects_iter=keys,
+            ))
+
+            if len(errors):
+                error_msg = '\n\n'.join(map(str, errors))
+                raise error.MinioError(error_msg)
