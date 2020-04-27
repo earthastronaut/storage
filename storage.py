@@ -23,13 +23,13 @@ class StorageObject:
         self,
         bucket,
         key,
-        value,
+        data,
         metadata=None,
     ):
         self.__dict__ = {
             'bucket': bucket,
             'key': key,
-            'value': value,
+            'data': data,
             'metadata': metadata or {}
         }
 
@@ -96,33 +96,33 @@ class StorageClient(Minio):
         return json.loads(s)
 
     @staticmethod
-    def helper_serialize_value(value, encoding='utf-8'):
-        if isinstance(value, bytes):
+    def helper_serialize_data(data, encoding='utf-8'):
+        if isinstance(data, bytes):
             serializer_method = None
             encoding = None
             content_type = 'application/octet-stream'
-            value_serialized = value
+            data_serialized = data
 
-        elif isinstance(value, str):
+        elif isinstance(data, str):
             serializer_method = 'str'
             encoding = encoding
             content_type = 'application/octet-stream'
-            value_serialized = value.encode(encoding)
+            data_serialized = data.encode(encoding)
 
-        elif isinstance(value, dict):
+        elif isinstance(data, dict):
             serializer_method = 'json'
             encoding = encoding
             content_type = f'application/json; charset={encoding}'
-            value_serialized = json.dumps(value).encode(encoding)
+            data_serialized = json.dumps(data).encode(encoding)
 
         else:
             raise TypeError(
-                f'No method for converting type {type(value)} to bytes'
+                f'No method for converting type {type(data)} to bytes'
             )
 
         return {
-            'value': value_serialized,
-            'value_length': len(value_serialized),
+            'data': data_serialized,
+            'data_length': len(data_serialized),
             'content_type': content_type,
             'serializer_info': {
                 'method': serializer_method,
@@ -131,46 +131,46 @@ class StorageClient(Minio):
         }
 
     @staticmethod
-    def helper_deserialize_value(value, serializer_info=None):
+    def helper_deserialize_data(data, serializer_info=None):
         if serializer_info is None:
-            return value
+            return data
 
         serializer_method = serializer_info['method']
         encoding = serializer_info['encoding']
         if serializer_method is None:
-            return value
+            return data
 
         elif serializer_method == 'str':
-            return value.decode(encoding)
+            return data.decode(encoding)
 
         elif serializer_method == 'json':
-            return json.loads(value.decode(encoding))
+            return json.loads(data.decode(encoding))
 
         else:
             raise error.MinioError(f'Unknown serializer method {serializer_method}')  # noqa
 
-    def create_storage_object(self, bucket, key, value=None, metadata=None, **kws):  # noqa
+    def create_storage_object(self, bucket, key, data=None, metadata=None, **kws):  # noqa
         return self.StorageObjectClass(
             bucket=bucket,
             key=key,
-            value=value,
+            data=data,
             metadata=metadata,
             **kws
         )
 
-    def put_value(self, bucket, key, value, metadata=None, encoding='utf-8'):
+    def put_data(self, bucket, key, data, metadata=None, encoding='utf-8'):
         """Put the content into storage.
 
         Args:
             bucket (str): Bucket category for the data.
             key (str): Key to store data at.
-            value (bytes | str | dict): Storage objects. Has multiple options.
+            data (bytes | str | dict): Storage objects. Has multiple options.
                 If other than bytes are provided then metadata will be updated.
 
                 * bytes: store these bytes exactly
                 * str: will use the "encoding" parameter to encode.
                     metadata['encoding'] = encoding
-                * dict: will use json.dumps(value).encode('utf-8')
+                * dict: will use json.dumps(data).encode('utf-8')
                     metadata.setdefault(
                         'content_type', 'application/json; charset=utf-8')
             metadata (dict): Information store about the data.
@@ -183,18 +183,18 @@ class StorageClient(Minio):
         storage_object = self.create_storage_object(
             bucket=bucket,
             key=key,
-            value=value,
+            data=data,
             metadata=metadata,
         )
 
-        serialized = self.helper_serialize_value(value, encoding=encoding)
+        serialized = self.helper_serialize_data(data, encoding=encoding)
 
         super().put_object(
             bucket_name=bucket,
             object_name=key,
-            data=io.BytesIO(serialized['value']),
+            data=io.BytesIO(serialized['data']),
             content_type=serialized['content_type'],
-            length=serialized['value_length'],
+            length=serialized['data_length'],
             metadata={
                 # these are headers which minio transforms metadata into
                 'X-Amz-Meta-SerializerInfo': self.serialize_metadata(serialized['serializer_info']),  # noqa
@@ -206,21 +206,21 @@ class StorageClient(Minio):
     def put_object(self, storage_object, encoding='utf-8'):
         """Put object into storage.
 
-        Also see: help(put_value)
+        Also see: help(put_data)
 
         Args:
             storage_object (StorageObject): The object containing the bucket
-                key, value, and metadata.
+                key, data, and metadata.
             encoding (str): Used for encoding if str is provided.
 
         Returns:
             StorageObject: new storage object from the components including the
                 storage client.
         """
-        self.put_value(
+        self.put_data(
             bucket=storage_object.bucket,
             key=storage_object.key,
-            value=storage_object.value,
+            data=storage_object.data,
             metadata=storage_object.metadata,
             encoding=encoding,
         )
@@ -231,7 +231,7 @@ class StorageClient(Minio):
         Args:
             bucket (str): Bucket category for the data.
             key (str): Key to store data at.
-            deserialize (bool): If True then will attempt to deserialize value.
+            deserialize (bool): If True then will attempt to deserialize data.
 
         Returns:
             StorageObject: The object sent to storage.
@@ -242,7 +242,7 @@ class StorageClient(Minio):
             object_name=key,
         )
 
-        value = self.helper_deserialize_value(
+        data = self.helper_deserialize_data(
             response.read(),
             serializer_info=self.deserialize_metadata(
                 response.getheader('X-Amz-Meta-SerializerInfo')
@@ -255,7 +255,7 @@ class StorageClient(Minio):
         return StorageObject(
             bucket=bucket,
             key=key,
-            value=value,
+            data=data,
             metadata=metadata,
         )
 

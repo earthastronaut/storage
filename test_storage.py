@@ -37,10 +37,10 @@ class TestStorageClient(unittest.TestCase):
     def test_storage_client(self):
         client = self.client
 
-        obj_put = client.put_value(
+        obj_put = client.put_data(
             bucket=self.bucket,
             key='turtle/rabbit.json',
-            value={"hello": "world\u0000"},
+            data={"hello": "world\u0000"},
             metadata={'meta': 'data'},
         )
 
@@ -59,14 +59,14 @@ class TestStorageClient(unittest.TestCase):
         )
         self.assertEqual(answer, correct_answer)
 
-    def test_storage_client_serialize_value(self):
+    def test_storage_client_serialize_data(self):
         client = self.client
 
-        value = b'abc'
-        answer = client.helper_serialize_value(value)
+        data = b'abc'
+        answer = client.helper_serialize_data(data)
         correct_answer = {
-            'value': b'abc',
-            'value_length': 3,
+            'data': b'abc',
+            'data_length': 3,
             'content_type': 'application/octet-stream',
             'serializer_info': {
                 'method': None,
@@ -75,11 +75,11 @@ class TestStorageClient(unittest.TestCase):
         }
         self.assertEqual(answer, correct_answer)
 
-        value = 'abc'
-        answer = client.helper_serialize_value(value)
+        data = 'abc'
+        answer = client.helper_serialize_data(data)
         correct_answer = {
-            'value': b'abc',
-            'value_length': 3,
+            'data': b'abc',
+            'data_length': 3,
             'content_type': 'application/octet-stream',
             'serializer_info': {
                 'method': 'str',
@@ -88,11 +88,11 @@ class TestStorageClient(unittest.TestCase):
         }
         self.assertEqual(answer, correct_answer)
 
-        value = 'abc'
-        answer = client.helper_serialize_value(value, encoding='ascii')
+        data = 'abc'
+        answer = client.helper_serialize_data(data, encoding='ascii')
         correct_answer = {
-            'value': b'abc',
-            'value_length': 3,
+            'data': b'abc',
+            'data_length': 3,
             'content_type': 'application/octet-stream',
             'serializer_info': {
                 'method': 'str',
@@ -101,11 +101,11 @@ class TestStorageClient(unittest.TestCase):
         }
         self.assertEqual(answer, correct_answer)
 
-        value = {'hello': 'world'}
-        answer = client.helper_serialize_value(value)
+        data = {'hello': 'world'}
+        answer = client.helper_serialize_data(data)
         correct_answer = {
-            'value': b'{"hello": "world"}',
-            'value_length': 18,
+            'data': b'{"hello": "world"}',
+            'data_length': 18,
             'content_type': 'application/json; charset=utf-8',
             'serializer_info': {
                 'method': 'json',
@@ -114,11 +114,11 @@ class TestStorageClient(unittest.TestCase):
         }
         self.assertEqual(answer, correct_answer)
 
-        value = {'hello': 'world'}
-        answer = client.helper_serialize_value(value, encoding='ascii')
+        data = {'hello': 'world'}
+        answer = client.helper_serialize_data(data, encoding='ascii')
         correct_answer = {
-            'value': b'{"hello": "world"}',
-            'value_length': 18,
+            'data': b'{"hello": "world"}',
+            'data_length': 18,
             'content_type': 'application/json; charset=ascii',
             'serializer_info': {
                 'method': 'json',
@@ -130,10 +130,10 @@ class TestStorageClient(unittest.TestCase):
     def test_storage_client_remove_object(self):
         client = self.client
 
-        obj = client.put_value(
+        obj = client.put_data(
             bucket=self.bucket,
             key=f'rabbit_deleteme.json',
-            value={"hello": "world"},
+            data={"hello": "world"},
         )
 
         client.remove_object(obj)
@@ -153,10 +153,10 @@ class TestStorageClient(unittest.TestCase):
         objects = []
         for i in range(3):
             objects.append(
-                client.put_value(
+                client.put_data(
                     bucket=bucket,
                     key=f'turtle/rabbit{i}.json',
-                    value={"hello": i},
+                    data={"hello": i},
                 )
             )
         client.remove_objects(objects)
