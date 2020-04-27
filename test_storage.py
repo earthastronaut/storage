@@ -25,20 +25,23 @@ def create_client():
 
 
 class TestStorageClient(unittest.TestCase):
+    testing_bucket = 'unittests'
 
     @classmethod
     def setUpClass(cls):
         cls.client = create_client()
 
     def setUp(self):
-        self.bucket_name = 'rabbit'
-        self.client.get_or_make_bucket(self.bucket_name)
+        self.client.get_or_make_bucket(self.testing_bucket)
+
+    def tearDown(self):
+        self.client.remove_bucket(self.testing_bucket, remove_objects=True)
 
     def test_storage_client(self):
         client = self.client
 
         obj_put = client.put_data(
-            bucket_name=self.bucket_name,
+            bucket_name=self.testing_bucket,
             object_name='turtle/rabbit.json',
             data={"hello": "world\u0000"},
             metadata={'meta': 'data'},
@@ -55,7 +58,7 @@ class TestStorageClient(unittest.TestCase):
         client = self.client
 
         obj_put = client.create_storage_object(
-            bucket_name=self.bucket_name,
+            bucket_name=self.testing_bucket,
             object_name='turtle/rabbit.json',
             data={"hello": "world\u0000"},
             metadata={'meta': 'data'},
@@ -149,7 +152,7 @@ class TestStorageClient(unittest.TestCase):
         client = self.client
 
         obj = client.put_data(
-            bucket_name=self.bucket_name,
+            bucket_name=self.testing_bucket,
             object_name=f'rabbit_deleteme.json',
             data={"hello": "world"},
         )
@@ -166,7 +169,7 @@ class TestStorageClient(unittest.TestCase):
 
     def test_storage_client_remove_objects(self):
         client = self.client
-        bucket_name = self.bucket_name
+        bucket_name = self.testing_bucket
 
         objects = []
         for i in range(3):
@@ -187,9 +190,6 @@ class TestStorageClient(unittest.TestCase):
                 bucket_name=obj.bucket_name,
                 object_name=obj.object_name,
             )
-
-    def test_remove_bucket(self):
-        pass
 
 
 if __name__ == '__main__':

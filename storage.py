@@ -296,3 +296,16 @@ class StorageClient(Minio):
             if len(errors):
                 error_msg = '\n\n'.join(map(str, errors))
                 raise error.MinioError(error_msg)
+
+    def remove_bucket(self, bucket_name, remove_objects=False):
+        """ Remove a bucket.
+
+        Args:
+            bucket_name (str): Name of the bucket.
+            remove_objects (bool): If True then remove all objects in the
+                bucket first.
+        """
+        if remove_objects:
+            list_objects = self.list_objects_v2(bucket_name, recursive=True)
+            self.remove_storage_objects(list_objects)
+        super().remove_bucket(bucket_name)
