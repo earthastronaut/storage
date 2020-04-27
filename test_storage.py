@@ -44,7 +44,25 @@ class TestStorageClient(unittest.TestCase):
             metadata={'meta': 'data'},
         )
 
-        obj_get = client.get_object(
+        obj_get = client.get_storage_object(
+            bucket_name=obj_put.bucket_name,
+            object_name=obj_put.object_name,
+        )
+
+        self.assertEqual(obj_put, obj_get)
+
+    def test_put_storage_object(self):
+        client = self.client
+
+        obj_put = client.create_storage_object(
+            bucket_name=self.bucket_name,
+            object_name='turtle/rabbit.json',
+            data={"hello": "world\u0000"},
+            metadata={'meta': 'data'},
+        )
+        client.put_storage_object(obj_put)
+
+        obj_get = client.get_storage_object(
             bucket_name=obj_put.bucket_name,
             object_name=obj_put.object_name,
         )
@@ -136,7 +154,7 @@ class TestStorageClient(unittest.TestCase):
             data={"hello": "world"},
         )
 
-        client.remove_object(obj)
+        client.remove_storage_object(obj)
 
         self.assertRaises(
             storage.error.NoSuchKey,
@@ -159,7 +177,7 @@ class TestStorageClient(unittest.TestCase):
                     data={"hello": i},
                 )
             )
-        client.remove_objects(objects)
+        client.remove_storage_objects(objects)
 
         for obj in objects:
             self.assertRaises(

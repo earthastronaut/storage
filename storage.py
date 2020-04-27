@@ -203,7 +203,7 @@ class StorageClient(Minio):
         )
         return storage_object
 
-    def put_object(self, storage_object, encoding='utf-8'):
+    def put_storage_object(self, storage_object, encoding='utf-8'):
         """Put object into storage.
 
         Also see: help(put_data)
@@ -225,7 +225,7 @@ class StorageClient(Minio):
             encoding=encoding,
         )
 
-    def get_object(self, bucket_name, object_name, deserialize=True):
+    def get_storage_object(self, bucket_name, object_name, deserialize=True):
         """Get object and metadata from storage
 
         Args:
@@ -259,7 +259,7 @@ class StorageClient(Minio):
             metadata=metadata,
         )
 
-    def remove_object(self, storage_object):
+    def remove_storage_object(self, storage_object):
         """ Remove object from bucket.
 
         Args:
@@ -271,7 +271,7 @@ class StorageClient(Minio):
             object_name=storage_object.object_name,
         )
 
-    def remove_objects(self, storage_objects):
+    def remove_storage_objects(self, storage_objects):
         """ Remove objects from bucket.
 
         Objects are deleted in batch. 
