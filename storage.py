@@ -52,8 +52,6 @@ class StorageClient:
         region (str): Set this value to override automatic bucket location discovery.
         timeout (int): Set this value to control how long requests
 
-    Example:
-
     """
 
     StorageObjectClass = StorageObject
@@ -61,6 +59,15 @@ class StorageClient:
     def __init__(self, endpoint, **kws):
         kws['endpoint'] = endpoint
         self.minio_client = Minio(**kws)
+
+    def close(self):
+        self.minio_client._http.clear()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.close()
 
     def get_or_create_bucket(self, bucket):
         try:
