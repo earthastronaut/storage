@@ -31,21 +31,21 @@ class TestStorageClient(unittest.TestCase):
         cls.client = create_client()
 
     def setUp(self):
-        self.bucket = 'rabbit'
-        self.client.get_or_make_bucket(self.bucket)
+        self.bucket_name = 'rabbit'
+        self.client.get_or_make_bucket(self.bucket_name)
 
     def test_storage_client(self):
         client = self.client
 
         obj_put = client.put_data(
-            bucket=self.bucket,
+            bucket_name=self.bucket_name,
             object_name='turtle/rabbit.json',
             data={"hello": "world\u0000"},
             metadata={'meta': 'data'},
         )
 
         obj_get = client.get_object(
-            bucket=obj_put.bucket,
+            bucket_name=obj_put.bucket_name,
             object_name=obj_put.object_name,
         )
 
@@ -131,7 +131,7 @@ class TestStorageClient(unittest.TestCase):
         client = self.client
 
         obj = client.put_data(
-            bucket=self.bucket,
+            bucket_name=self.bucket_name,
             object_name=f'rabbit_deleteme.json',
             data={"hello": "world"},
         )
@@ -142,19 +142,19 @@ class TestStorageClient(unittest.TestCase):
             storage.error.NoSuchKey,
             client.get_object,
             # **kws
-            bucket=obj.bucket,
+            bucket_name=obj.bucket_name,
             object_name=obj.object_name,
         )
 
     def test_storage_client_remove_objects(self):
         client = self.client
-        bucket = self.bucket
+        bucket_name = self.bucket_name
 
         objects = []
         for i in range(3):
             objects.append(
                 client.put_data(
-                    bucket=bucket,
+                    bucket_name=bucket_name,
                     object_name=f'turtle/rabbit{i}.json',
                     data={"hello": i},
                 )
@@ -166,7 +166,7 @@ class TestStorageClient(unittest.TestCase):
                 storage.error.NoSuchKey,
                 client.get_object,
                 # **kws
-                bucket=obj.bucket,
+                bucket_name=obj.bucket_name,
                 object_name=obj.object_name,
             )
 
