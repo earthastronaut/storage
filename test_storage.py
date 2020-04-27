@@ -15,16 +15,20 @@ config.MINIO_ACCESS_KEY = 'ACCESSKEYWHICHSHOULDBECHANGED'
 config.MINIO_SECRET_KEY = 'SECRETKEYWHICHSHOULDBECHANGED'
 
 
+def create_client():
+    return storage.StorageClient(
+        endpoint=config.MINIO_ENDPOINT,
+        access_key=config.MINIO_ACCESS_KEY,
+        secret_key=config.MINIO_SECRET_KEY,
+        secure=(not config.DEBUG),
+    )
+
+
 class TestStorageClient(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.client = storage.StorageClient(
-            endpoint=config.MINIO_ENDPOINT,
-            access_key=config.MINIO_ACCESS_KEY,
-            secret_key=config.MINIO_SECRET_KEY,
-            secure=(not config.DEBUG),
-        )
+        cls.client = create_client()
 
     def setUp(self):
         self.bucket = 'rabbit'
