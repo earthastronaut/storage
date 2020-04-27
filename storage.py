@@ -65,7 +65,7 @@ class StorageClient(Minio):
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
 
-    def get_or_create_bucket(self, bucket):
+    def get_or_make_bucket(self, bucket):
         try:
             self.make_bucket(bucket)
         except (

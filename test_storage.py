@@ -32,7 +32,7 @@ class TestStorageClient(unittest.TestCase):
 
     def setUp(self):
         self.bucket = 'rabbit'
-        self.client.get_or_create_bucket(self.bucket)
+        self.client.get_or_make_bucket(self.bucket)
 
     def test_storage_client(self):
         client = self.client
@@ -169,6 +169,9 @@ class TestStorageClient(unittest.TestCase):
                 bucket=obj.bucket,
                 key=obj.key,
             )
+
+    def test_remove_bucket(self):
+        pass
 
 
 if __name__ == '__main__':
