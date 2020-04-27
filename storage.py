@@ -40,7 +40,7 @@ class StorageObject:
         return self.__dict__ == other.__dict__
 
 
-class StorageClient:
+class StorageClient(Minio):
     """ Wrapper around Minio client which provides byte object put/get
 
     Args:
@@ -56,12 +56,8 @@ class StorageClient:
 
     StorageObjectClass = StorageObject
 
-    def __init__(self, endpoint, **kws):
-        kws['endpoint'] = endpoint
-        self.minio_client = Minio(**kws)
-
     def close(self):
-        self.minio_client._http.clear()
+        self._http.clear()
 
     def __enter__(self):
         return self
@@ -71,7 +67,7 @@ class StorageClient:
 
     def get_or_create_bucket(self, bucket):
         try:
-            self.minio_client.make_bucket(bucket)
+            self.make_bucket(bucket)
         except (
             error.BucketAlreadyOwnedByYou,
             error.BucketAlreadyExists,
@@ -193,7 +189,7 @@ class StorageClient:
 
         serialized = self.helper_serialize_value(value, encoding=encoding)
 
-        self.minio_client.put_object(
+        super().put_object(
             bucket_name=bucket,
             object_name=key,
             data=io.BytesIO(serialized['value']),
@@ -241,7 +237,7 @@ class StorageClient:
             StorageObject: The object sent to storage.
 
         """
-        response = self.minio_client.get_object(
+        response = super().get_object(
             bucket_name=bucket,
             object_name=key,
         )
@@ -270,7 +266,7 @@ class StorageClient:
             storage_object (StorageObject): The bucket and key of the storage
                 object.
         """
-        self.minio_client.remove_object(
+        super().remove_object(
             bucket_name=storage_object.bucket,
             object_name=storage_object.key,
         )
@@ -292,7 +288,7 @@ class StorageClient:
             objects_by_bucket.setdefault(obj.bucket, []).append(obj.key)
 
         for bucket, keys in objects_by_bucket.items():
-            errors = list(self.minio_client.remove_objects(
+            errors = list(super().remove_objects(
                 bucket_name=bucket,
                 objects_iter=keys,
             ))
