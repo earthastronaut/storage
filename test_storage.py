@@ -39,14 +39,14 @@ class TestStorageClient(unittest.TestCase):
 
         obj_put = client.put_data(
             bucket=self.bucket,
-            key='turtle/rabbit.json',
+            object_name='turtle/rabbit.json',
             data={"hello": "world\u0000"},
             metadata={'meta': 'data'},
         )
 
         obj_get = client.get_object(
             bucket=obj_put.bucket,
-            key=obj_put.key,
+            object_name=obj_put.object_name,
         )
 
         self.assertEqual(obj_put, obj_get)
@@ -132,7 +132,7 @@ class TestStorageClient(unittest.TestCase):
 
         obj = client.put_data(
             bucket=self.bucket,
-            key=f'rabbit_deleteme.json',
+            object_name=f'rabbit_deleteme.json',
             data={"hello": "world"},
         )
 
@@ -143,7 +143,7 @@ class TestStorageClient(unittest.TestCase):
             client.get_object,
             # **kws
             bucket=obj.bucket,
-            key=obj.key,
+            object_name=obj.object_name,
         )
 
     def test_storage_client_remove_objects(self):
@@ -155,7 +155,7 @@ class TestStorageClient(unittest.TestCase):
             objects.append(
                 client.put_data(
                     bucket=bucket,
-                    key=f'turtle/rabbit{i}.json',
+                    object_name=f'turtle/rabbit{i}.json',
                     data={"hello": i},
                 )
             )
@@ -167,7 +167,7 @@ class TestStorageClient(unittest.TestCase):
                 client.get_object,
                 # **kws
                 bucket=obj.bucket,
-                key=obj.key,
+                object_name=obj.object_name,
             )
 
     def test_remove_bucket(self):

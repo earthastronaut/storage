@@ -22,13 +22,13 @@ class StorageObject:
     def __init__(
         self,
         bucket,
-        key,
+        object_name,
         data,
         metadata=None,
     ):
         self.__dict__ = {
             'bucket': bucket,
-            'key': key,
+            'object_name': object_name,
             'data': data,
             'metadata': metadata or {}
         }
@@ -149,21 +149,21 @@ class StorageClient(Minio):
         else:
             raise error.MinioError(f'Unknown serializer method {serializer_method}')  # noqa
 
-    def create_storage_object(self, bucket, key, data=None, metadata=None, **kws):  # noqa
+    def create_storage_object(self, bucket, object_name, data=None, metadata=None, **kws):  # noqa
         return self.StorageObjectClass(
             bucket=bucket,
-            key=key,
+            object_name=object_name,
             data=data,
             metadata=metadata,
             **kws
         )
 
-    def put_data(self, bucket, key, data, metadata=None, encoding='utf-8'):
+    def put_data(self, bucket, object_name, data, metadata=None, encoding='utf-8'):
         """Put the content into storage.
 
         Args:
             bucket (str): Bucket category for the data.
-            key (str): Key to store data at.
+            object_name (str): Key to store data at.
             data (bytes | str | dict): Storage objects. Has multiple options.
                 If other than bytes are provided then metadata will be updated.
 
@@ -182,7 +182,7 @@ class StorageClient(Minio):
         """
         storage_object = self.create_storage_object(
             bucket=bucket,
-            key=key,
+            object_name=object_name,
             data=data,
             metadata=metadata,
         )
@@ -191,7 +191,7 @@ class StorageClient(Minio):
 
         super().put_object(
             bucket_name=bucket,
-            object_name=key,
+            object_name=object_name,
             data=io.BytesIO(serialized['data']),
             content_type=serialized['content_type'],
             length=serialized['data_length'],
@@ -219,18 +219,18 @@ class StorageClient(Minio):
         """
         self.put_data(
             bucket=storage_object.bucket,
-            key=storage_object.key,
+            object_name=storage_object.object_name,
             data=storage_object.data,
             metadata=storage_object.metadata,
             encoding=encoding,
         )
 
-    def get_object(self, bucket, key, deserialize=True):
+    def get_object(self, bucket, object_name, deserialize=True):
         """Get object and metadata from storage
 
         Args:
             bucket (str): Bucket category for the data.
-            key (str): Key to store data at.
+            object_name (str): Key to store data at.
             deserialize (bool): If True then will attempt to deserialize data.
 
         Returns:
@@ -239,7 +239,7 @@ class StorageClient(Minio):
         """
         response = super().get_object(
             bucket_name=bucket,
-            object_name=key,
+            object_name=object_name,
         )
 
         data = self.helper_deserialize_data(
@@ -254,7 +254,7 @@ class StorageClient(Minio):
 
         return StorageObject(
             bucket=bucket,
-            key=key,
+            object_name=object_name,
             data=data,
             metadata=metadata,
         )
@@ -263,12 +263,12 @@ class StorageClient(Minio):
         """ Remove object from bucket.
 
         Args:
-            storage_object (StorageObject): The bucket and key of the storage
-                object.
+            storage_object (StorageObject): The bucket and object_name of the 
+                storage object.
         """
         super().remove_object(
             bucket_name=storage_object.bucket,
-            object_name=storage_object.key,
+            object_name=storage_object.object_name,
         )
 
     def remove_objects(self, storage_objects):
@@ -285,12 +285,12 @@ class StorageClient(Minio):
         """
         objects_by_bucket = {}
         for obj in storage_objects:
-            objects_by_bucket.setdefault(obj.bucket, []).append(obj.key)
+            objects_by_bucket.setdefault(obj.bucket, []).append(obj.object_name)  # noqa
 
-        for bucket, keys in objects_by_bucket.items():
+        for bucket, object_names in objects_by_bucket.items():
             errors = list(super().remove_objects(
                 bucket_name=bucket,
-                objects_iter=keys,
+                objects_iter=object_names,
             ))
 
             if len(errors):
